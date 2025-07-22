@@ -12,8 +12,21 @@ class RPGApp:
     def __init__(self, master):
         self.master = master
         self.master.title("RPG de Masmorra Dinâmica")
-        self.master.geometry("500x450")
-        self.master.configure(bg="#2d2d2d")
+        self.master.state('zoomed') 
+
+        # --- Cores e Estilo ---
+        self.colors = {
+            "bg_main": "#282c34",
+            "bg_frame": "#3c4049",
+            "bg_widget": "#21252b",
+            "fg_normal": "#abb2bf",
+            "fg_title": "#61afef",
+            "fg_success": "#98c379",
+            "fg_danger": "#e06c75",
+            "accent": "#c678dd",
+            "disabled": "#5c6370"
+        }
+        self.master.configure(bg=self.colors["bg_main"])
 
         # --- Game State ---
         self.heroi_selecionado = None
@@ -29,17 +42,17 @@ class RPGApp:
 
         # --- Dungeon State ---
         self.andar_atual = 0
-        self.total_andares = 0
+        self.total_andares = 3 # Começa com 3 andares
 
         # --- Styling ---
         self.default_font = font.nametofont("TkDefaultFont")
-        self.default_font.configure(family="Helvetica", size=11)
-        self.title_font = ("Helvetica", 20, "bold")
-        self.button_font = ("Helvetica", 12)
-        self.label_font = ("Helvetica", 12)
-        self.stats_font = ("Consolas", 12) # Monospaced font for better alignment
+        self.default_font.configure(family="Segoe UI", size=10)
+        self.title_font = ("Segoe UI", 20, "bold")
+        self.button_font = ("Segoe UI", 12)
+        self.label_font = ("Segoe UI", 12)
+        self.stats_font = ("Consolas", 11)
 
-        self.main_frame = tk.Frame(master, bg="#2d2d2d")
+        self.main_frame = tk.Frame(master, bg=self.colors["bg_main"])
         self.main_frame.pack(fill='both', expand=True, padx=20, pady=20)
 
         self.tela_inicial()
@@ -53,58 +66,58 @@ class RPGApp:
         """Displays the main menu screen."""
         self.limpar_tela()
 
-        tk.Label(self.main_frame, text="RPG de Masmorra", font=self.title_font, fg="white", bg="#2d2d2d").pack(pady=(0, 20))
+        tk.Label(self.main_frame, text="RPG de Masmorra", font=self.title_font, fg=self.colors["fg_title"], bg=self.colors["bg_main"]).pack(pady=(0, 20))
         
         vidas_texto = "❤️ " * self.vidas_heroi if self.vidas_heroi > 0 else "☠️ GAME OVER"
-        tk.Label(self.main_frame, text=f"Vidas restantes: {vidas_texto}", font=self.stats_font, fg="white", bg="#2d2d2d").pack(pady=5)
+        tk.Label(self.main_frame, text=f"Vidas restantes: {vidas_texto}", font=self.stats_font, fg=self.colors["fg_normal"], bg=self.colors["bg_main"]).pack(pady=5)
 
         if self.heroi_selecionado:
             hero_info = f"Herói Ativo: {self.heroi_selecionado.nome} - {self.heroi_selecionado.classe} (Nível {self.heroi_selecionado.nivel})"
-            tk.Label(self.main_frame, text=hero_info, font=self.label_font, fg="#aaffaa", bg="#2d2d2d").pack(pady=10)
+            tk.Label(self.main_frame, text=hero_info, font=self.label_font, fg=self.colors["fg_success"], bg=self.colors["bg_main"]).pack(pady=10)
 
-        # --- Button Frame ---
-        button_frame = tk.Frame(self.main_frame, bg="#2d2d2d")
+        button_frame = tk.Frame(self.main_frame, bg=self.colors["bg_main"])
         button_frame.pack(pady=10)
 
-        btn_style = {'font': self.button_font, 'bg': '#4a4a4a', 'fg': 'white', 'activebackground': '#6a6a6a', 'activeforeground': 'white', 'width': 25, 'pady': 5, 'relief': 'raised', 'bd': 2}
+        btn_style = {'font': self.button_font, 'bg': self.colors["bg_frame"], 'fg': self.colors["fg_normal"], 'activebackground': self.colors["accent"], 'activeforeground': 'white', 'width': 25, 'pady': 5, 'relief': 'flat', 'bd': 0}
 
         tk.Button(button_frame, text="Criar Novo Herói", command=self.tela_criar_heroi, **btn_style).pack(pady=5)
         tk.Button(button_frame, text="Selecionar Herói", command=self.tela_selecionar_heroi, **btn_style).pack(pady=5)
 
         if self.heroi_selecionado and self.vidas_heroi > 0:
             dungeon_btn_style = btn_style.copy()
-            dungeon_btn_style['fg'] = "#aaffaa"
+            dungeon_btn_style['fg'] = self.colors["fg_success"]
             tk.Button(button_frame, text="Entrar na Masmorra", command=self.iniciar_masmorra, **dungeon_btn_style).pack(pady=5)
         else:
             disabled_btn_style = btn_style.copy()
             disabled_btn_style['state'] = 'disabled'
-            disabled_btn_style['bg'] = '#3a3a3a'
+            disabled_btn_style['bg'] = self.colors["bg_widget"]
+            disabled_btn_style['fg'] = self.colors["disabled"]
             tk.Button(button_frame, text="Entrar na Masmorra", **disabled_btn_style).pack(pady=5)
 
         exit_btn_style = btn_style.copy()
-        exit_btn_style['fg'] = "#ffaaaa"
+        exit_btn_style['fg'] = self.colors["fg_danger"]
         tk.Button(button_frame, text="Sair do Jogo", command=self.master.quit, **exit_btn_style).pack(pady=10)
 
     def tela_criar_heroi(self):
         """Handles the hero creation process in a new window."""
         popup = tk.Toplevel(self.master)
         popup.title("Criação de Herói")
-        popup.geometry("400x300")
-        popup.configure(bg="#3d3d3d")
+        popup.geometry("450x400")
+        popup.configure(bg=self.colors["bg_frame"])
 
-        tk.Label(popup, text="Nome do Herói:", fg="white", bg="#3d3d3d", font=self.label_font).pack(pady=(10,0))
-        nome_entry = tk.Entry(popup, width=30, font=self.label_font)
+        tk.Label(popup, text="Nome do Herói:", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], font=self.label_font).pack(pady=(10,0))
+        nome_entry = tk.Entry(popup, width=30, font=self.label_font, bg=self.colors["bg_widget"], fg=self.colors["fg_normal"], insertbackground='white', relief='flat')
         nome_entry.pack()
 
-        tk.Label(popup, text="Escolha sua Classe:", fg="white", bg="#3d3d3d", font=self.label_font).pack(pady=(10,0))
+        tk.Label(popup, text="Escolha sua Classe:", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], font=self.label_font).pack(pady=(10,0))
         classe_var = tk.StringVar(popup)
         classes = list(rpg_dinamico.CLASSES_BASE.keys())
         classe_var.set(classes[0])
         
         for classe in classes:
             tk.Radiobutton(popup, text=f"{classe} - {rpg_dinamico.CLASSES_BASE[classe]['desc']}", variable=classe_var, value=classe, 
-                           wraplength=350, justify='left', anchor='w', fg="white", bg="#3d3d3d", selectcolor="#5d5d5d", 
-                           activebackground="#3d3d3d", activeforeground="white", font=self.default_font).pack(padx=20, fill='x')
+                           wraplength=350, justify='left', anchor='w', fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], selectcolor=self.colors["bg_widget"], 
+                           activebackground=self.colors["bg_frame"], activeforeground=self.colors["fg_title"], font=self.default_font, indicatoron=0, relief='flat', highlightthickness=0).pack(padx=20, fill='x', pady=2)
 
         def confirmar_criacao():
             nome = nome_entry.get().strip()
@@ -122,13 +135,14 @@ class RPGApp:
             popup.destroy()
             self.tela_distribuir_pontos(novo_heroi, rpg_dinamico.PONTOS_DISTRIBUICAO_INICIAL, is_creation=True)
 
-        tk.Button(popup, text="Confirmar", command=confirmar_criacao, font=self.button_font, bg='#4a4a4a', fg='white').pack(pady=20)
+        tk.Button(popup, text="Confirmar", command=confirmar_criacao, font=self.button_font, bg=self.colors["accent"], fg='white', relief='flat').pack(pady=20)
 
-    def tela_distribuir_pontos(self, heroi, pontos, is_creation=False):
+    def tela_distribuir_pontos(self, heroi, pontos, is_creation=False, on_close_callback=None):
         """Opens a window to distribute attribute points."""
         popup = tk.Toplevel(self.master)
         popup.title("Distribuir Pontos de Atributo")
-        popup.configure(bg="#3d3d3d")
+        popup.geometry("500x300")
+        popup.configure(bg=self.colors["bg_frame"])
 
         pontos_restantes = tk.IntVar(value=pontos)
         
@@ -140,25 +154,31 @@ class RPGApp:
 
         def update_pontos_label(*args):
             gastos = sum(var.get() for var in stats_vars.values())
-            pontos_restantes.set(pontos - gastos)
-            pontos_label.config(text=f"Pontos restantes: {pontos_restantes.get()}")
+            restantes = pontos - gastos
+            pontos_restantes.set(restantes)
+            pontos_label.config(text=f"Pontos restantes: {restantes}")
+            if restantes < 0:
+                pontos_label.config(fg=self.colors["fg_danger"])
+            else:
+                pontos_label.config(fg=self.colors["fg_normal"])
 
         for var in stats_vars.values():
             var.trace_add("write", update_pontos_label)
 
-        tk.Label(popup, text=f"Você tem {pontos} pontos para distribuir.", fg="white", bg="#3d3d3d", font=self.label_font).pack(pady=10)
-        pontos_label = tk.Label(popup, text=f"Pontos restantes: {pontos}", fg="white", bg="#3d3d3d", font=self.label_font)
+        tk.Label(popup, text=f"Você tem {pontos} pontos para distribuir.", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], font=self.label_font).pack(pady=10)
+        pontos_label = tk.Label(popup, text=f"Pontos restantes: {pontos}", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], font=self.label_font)
         pontos_label.pack(pady=5)
 
         for stat, var in stats_vars.items():
-            frame = tk.Frame(popup, bg="#3d3d3d")
+            frame = tk.Frame(popup, bg=self.colors["bg_frame"])
             frame.pack(fill='x', padx=20, pady=5)
-            tk.Label(frame, text=stat.replace('_base', '').capitalize(), fg="white", bg="#3d3d3d", width=10, anchor='w').pack(side='left')
-            tk.Scale(frame, from_=0, to=pontos, variable=var, orient='horizontal', length=200, bg="#5d5d5d", fg="white", troughcolor="#2d2d2d").pack(side='left', expand=True, fill='x')
+            tk.Label(frame, text=stat.replace('_base', '').capitalize(), fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], width=10, anchor='w').pack(side='left')
+            tk.Scale(frame, from_=0, to=pontos, variable=var, orient='horizontal', length=200, bg=self.colors["disabled"], fg=self.colors["fg_title"], troughcolor=self.colors["bg_widget"], highlightthickness=0, relief='flat').pack(side='left', expand=True, fill='x')
 
         def confirmar_pontos():
-            if pontos_restantes.get() < 0:
-                messagebox.showerror("Erro", "Você gastou pontos demais!", parent=popup)
+            gastos = sum(var.get() for var in stats_vars.values())
+            if gastos > pontos:
+                messagebox.showerror("Erro", f"Você só pode distribuir {pontos} pontos, mas tentou usar {gastos}!", parent=popup)
                 return
             
             heroi.forca_base += stats_vars["forca_base"].get()
@@ -172,13 +192,15 @@ class RPGApp:
                 rpg_dinamico.HEROIS_CRIADOS[heroi.nome] = heroi
                 self.heroi_selecionado = heroi
                 messagebox.showinfo("Sucesso", f"Herói {heroi.nome} criado com sucesso!")
-            else:
-                messagebox.showinfo("Level Up!", f"{heroi.nome} alcançou o nível {heroi.nivel}!")
-
+            
             popup.destroy()
-            self.tela_inicial()
 
-        tk.Button(popup, text="Confirmar", command=confirmar_pontos, font=self.button_font, bg='#4a4a4a', fg='white').pack(pady=20)
+            if on_close_callback:
+                on_close_callback()
+            else:
+                self.tela_inicial()
+
+        tk.Button(popup, text="Confirmar", command=confirmar_pontos, font=self.button_font, bg=self.colors["accent"], fg='white', relief='flat').pack(pady=20)
         popup.transient(self.master)
         popup.grab_set()
         self.master.wait_window(popup)
@@ -192,38 +214,65 @@ class RPGApp:
 
         popup = tk.Toplevel(self.master)
         popup.title("Selecionar Herói")
-        popup.geometry("400x350")
-        popup.configure(bg="#3d3d3d")
+        popup.geometry("700x450")
+        popup.configure(bg=self.colors["bg_frame"])
 
-        tk.Label(popup, text="Escolha seu herói:", fg="white", bg="#3d3d3d", font=self.label_font).pack(pady=10)
+        tk.Label(popup, text="Escolha seu herói:", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], font=self.label_font).pack(pady=10)
         
-        listbox_frame = tk.Frame(popup, bg="#3d3d3d")
-        listbox_frame.pack(expand=True, fill='both', padx=20, pady=5)
+        main_frame = tk.Frame(popup, bg=self.colors["bg_frame"])
+        main_frame.pack(expand=True, fill='both', padx=10, pady=5)
+
+        listbox_frame = tk.Frame(main_frame, bg=self.colors["bg_frame"])
+        listbox_frame.pack(side='left', expand=True, fill='both', padx=(0, 5))
         
-        listbox = tk.Listbox(listbox_frame, font=self.label_font, bg="#2d2d2d", fg="white", selectbackground="#0078d7")
+        listbox = tk.Listbox(listbox_frame, font=self.label_font, bg=self.colors["bg_widget"], fg=self.colors["fg_normal"], selectbackground=self.colors["accent"], exportselection=False, relief='flat', highlightthickness=0)
         listbox.pack(side='left', expand=True, fill='both')
 
-        scrollbar = tk.Scrollbar(listbox_frame, orient='vertical', command=listbox.yview)
+        scrollbar = tk.Scrollbar(listbox_frame, orient='vertical', command=listbox.yview, relief='flat')
         scrollbar.pack(side='right', fill='y')
         listbox.config(yscrollcommand=scrollbar.set)
+
+        status_frame = tk.Frame(main_frame, bg=self.colors["bg_widget"])
+        status_frame.pack(side='right', expand=True, fill='both', padx=(5, 0))
+        
+        status_text = tk.Text(status_frame, bg=self.colors["bg_widget"], fg=self.colors["fg_normal"], font=self.stats_font, wrap='word', bd=0, highlightthickness=0)
+        status_text.pack(expand=True, fill='both', padx=10, pady=10)
+        status_text.insert(tk.END, "Selecione um herói para ver os detalhes.")
+        status_text.config(state='disabled')
 
         nomes_herois = list(rpg_dinamico.HEROIS_CRIADOS.keys())
         for nome in nomes_herois:
             heroi = rpg_dinamico.HEROIS_CRIADOS[nome]
             listbox.insert(tk.END, f"{heroi.nome} - {heroi.classe} (Nível {heroi.nivel})")
 
+        btn_confirmar = tk.Button(popup, text="Selecionar", font=self.button_font, bg=self.colors["accent"], fg='white', relief='flat', state='disabled')
+        
+        def on_hero_select(event):
+            if not listbox.curselection(): return
+            
+            nome_heroi = nomes_herois[listbox.curselection()[0]]
+            heroi = rpg_dinamico.HEROIS_CRIADOS[nome_heroi]
+            
+            status_text.config(state='normal')
+            status_text.delete('1.0', tk.END)
+            status_text.insert(tk.END, heroi.get_status_texto_com_itens())
+            status_text.config(state='disabled')
+            btn_confirmar.config(state='normal')
+
+        listbox.bind('<<ListboxSelect>>', on_hero_select)
+
         def confirmar_selecao():
-            selecionado = listbox.curselection()
-            if not selecionado:
+            if not listbox.curselection():
                 messagebox.showerror("Erro", "Por favor, selecione um herói.", parent=popup)
                 return
             
-            nome_heroi_selecionado = nomes_herois[selecionado[0]]
+            nome_heroi_selecionado = nomes_herois[listbox.curselection()[0]]
             self.heroi_selecionado = rpg_dinamico.HEROIS_CRIADOS[nome_heroi_selecionado]
             popup.destroy()
             self.tela_inicial()
 
-        tk.Button(popup, text="Selecionar", command=confirmar_selecao, font=self.button_font, bg='#4a4a4a', fg='white').pack(pady=10)
+        btn_confirmar.config(command=confirmar_selecao)
+        btn_confirmar.pack(pady=10)
 
     def iniciar_masmorra(self):
         """Prepares the hero and starts the first floor of the dungeon."""
@@ -231,11 +280,11 @@ class RPGApp:
         jogador.vida_atual = jogador.vida_maxima
         jogador.caos_atual = jogador.caos_maximo
         jogador.buffs_ativos = {}
+        jogador.efeitos_status = {}
 
         self.andar_atual = 1
-        self.total_andares = 2 + jogador.nivel
         
-        messagebox.showinfo("Masmorra", f"Você entra na masmorra. Ela tem {self.total_andares} andares.")
+        messagebox.showinfo("Masmorra", f"Você entra na masmorra. Ela tem {self.total_andares} andares antes do chefe.")
         
         self.proximo_andar()
 
@@ -258,47 +307,52 @@ class RPGApp:
 
         self.batalha_win = tk.Toplevel(self.master)
         self.batalha_win.title(f"Batalha contra {self.inimigo_atual.nome}")
-        self.batalha_win.geometry("800x600")
-        self.batalha_win.configure(bg="#2d2d2d")
+        self.batalha_win.geometry("1280x720")
+        self.batalha_win.configure(bg=self.colors["bg_main"])
         self.batalha_win.protocol("WM_DELETE_WINDOW", self.acao_fugir)
 
-        jogador = self.heroi_selecionado
-        inimigo = self.inimigo_atual
+        # --- Layout Responsivo ---
+        stats_frame = tk.Frame(self.batalha_win, bg=self.colors["bg_main"])
+        stats_frame.pack(side='top', fill='x', padx=10, pady=10)
+        
+        self.botoes_acao_frame = tk.Frame(self.batalha_win, bg=self.colors["bg_main"])
+        self.botoes_acao_frame.pack(side='bottom', fill='x', pady=20) # Posição ajustada
+        
+        log_frame = tk.Frame(self.batalha_win, bg=self.colors["bg_widget"])
+        log_frame.pack(side='top', expand=True, fill='both', padx=10, pady=10)
 
-        heroi_frame = tk.Frame(self.batalha_win, bg="#3d3d3d", bd=2, relief='sunken')
-        heroi_frame.pack(pady=10, padx=10, fill='x')
-        tk.Label(heroi_frame, text=f"Herói: {jogador.nome} ({jogador.classe})", font=self.button_font, fg="white", bg="#3d3d3d").pack()
-        self.heroi_stats_label = tk.Label(heroi_frame, text="", font=self.stats_font, fg="white", bg="#3d3d3d")
-        self.heroi_stats_label.pack()
+        # --- Painéis de Status ---
+        heroi_frame = tk.Frame(stats_frame, bg=self.colors["bg_frame"], bd=2, relief='sunken')
+        heroi_frame.pack(side='left', expand=True, fill='x', padx=(0, 5))
+        inimigo_frame = tk.Frame(stats_frame, bg=self.colors["bg_frame"], bd=2, relief='sunken')
+        inimigo_frame.pack(side='right', expand=True, fill='x', padx=(5, 0))
 
-        inimigo_frame = tk.Frame(self.batalha_win, bg="#3d3d3d", bd=2, relief='sunken')
-        inimigo_frame.pack(pady=10, padx=10, fill='x')
-        tk.Label(inimigo_frame, text=f"Inimigo: {inimigo.nome}", font=self.button_font, fg="white", bg="#3d3d3d").pack()
-        self.inimigo_stats_label = tk.Label(inimigo_frame, text="", font=self.stats_font, fg="white", bg="#3d3d3d")
-        self.inimigo_stats_label.pack()
+        tk.Label(heroi_frame, text=f"Herói: {self.heroi_selecionado.nome} ({self.heroi_selecionado.classe})", font=self.button_font, fg=self.colors["fg_title"], bg=self.colors["bg_frame"]).pack()
+        self.heroi_stats_label = tk.Label(heroi_frame, text="", font=self.stats_font, fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], justify='left')
+        self.heroi_stats_label.pack(fill='x', padx=5, pady=5)
 
-        log_frame = tk.Frame(self.batalha_win)
-        log_frame.pack(pady=10, padx=10, expand=True, fill='both')
-        self.log_text_widget = tk.Text(log_frame, height=10, width=80, bg="#1e1e1e", fg="white", font=self.stats_font, wrap='word')
-        self.log_text_widget.pack(side='left', expand=True, fill='both')
-        scrollbar = tk.Scrollbar(log_frame, command=self.log_text_widget.yview)
+        tk.Label(inimigo_frame, text=f"Inimigo: {self.inimigo_atual.nome}", font=self.button_font, fg=self.colors["fg_danger"], bg=self.colors["bg_frame"]).pack()
+        self.inimigo_stats_label = tk.Label(inimigo_frame, text="", font=self.stats_font, fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], justify='left')
+        self.inimigo_stats_label.pack(fill='x', padx=5, pady=5)
+
+        # --- Log de Batalha ---
+        self.log_text_widget = tk.Text(log_frame, height=10, bg=self.colors["bg_widget"], fg=self.colors["fg_normal"], font=self.stats_font, wrap='word', bd=0)
+        self.log_text_widget.pack(side='left', expand=True, fill='both', padx=5, pady=5)
+        scrollbar = tk.Scrollbar(log_frame, command=self.log_text_widget.yview, relief='flat', bg=self.colors["bg_widget"])
         scrollbar.pack(side='right', fill='y')
         self.log_text_widget.config(yscrollcommand=scrollbar.set)
 
-        self.botoes_acao_frame = tk.Frame(self.batalha_win, bg="#2d2d2d")
-        self.botoes_acao_frame.pack(pady=10)
+        # --- Botões de Ação ---
+        self.botoes_acao_frame.columnconfigure((0, 1, 2, 3, 4), weight=1) # Centraliza os botões
+        btn_style = {'font': self.button_font, 'bg': self.colors["bg_frame"], 'fg': self.colors["fg_normal"], 'width': 12, 'pady': 5, 'relief':'flat'}
         
-        btn_style = {'font': self.button_font, 'bg': '#4a4a4a', 'fg': 'white', 'width': 12, 'pady': 5}
-        
-        tk.Button(self.botoes_acao_frame, text="Atacar", command=self.acao_ataque, **btn_style).grid(row=0, column=0, padx=5)
-        tk.Button(self.botoes_acao_frame, text="Habilidade", command=self.acao_habilidade, **btn_style).grid(row=0, column=1, padx=5)
+        tk.Button(self.botoes_acao_frame, text="Ataque Básico", command=self.acao_ataque, **btn_style).grid(row=0, column=0, padx=5)
+        tk.Button(self.botoes_acao_frame, text="Habilidades", command=self.acao_habilidade_menu, **btn_style).grid(row=0, column=1, padx=5)
         tk.Button(self.botoes_acao_frame, text="Poção", command=self.acao_pocao, **btn_style).grid(row=0, column=2, padx=5)
         tk.Button(self.botoes_acao_frame, text="Fugir", command=self.acao_fugir, **btn_style).grid(row=0, column=3, padx=5)
         tk.Button(self.botoes_acao_frame, text="Status", command=self.tela_mostrar_status, **btn_style).grid(row=0, column=4, padx=5)
 
-        self.atualizar_status_batalha()
-        self.log_batalha(f"A batalha contra {inimigo.nome} começa!")
-        self.atualizar_botoes_acao()
+        self.turno_do_jogador_inicio()
         
         self.batalha_win.transient(self.master)
         self.batalha_win.grab_set()
@@ -307,23 +361,24 @@ class RPGApp:
         """Displays a popup with the hero's detailed status. Does not take a turn."""
         popup = tk.Toplevel(self.batalha_win)
         popup.title(f"Status de {self.heroi_selecionado.nome}")
-        popup.configure(bg="#3d3d3d")
+        popup.geometry("400x600")
+        popup.configure(bg=self.colors["bg_frame"])
         
-        status_texto = self.heroi_selecionado.get_status_texto()
+        status_texto = self.heroi_selecionado.get_status_texto_com_itens()
 
-        text_frame = tk.Frame(popup, bg="#3d3d3d")
+        text_frame = tk.Frame(popup, bg=self.colors["bg_widget"])
         text_frame.pack(expand=True, fill='both', padx=15, pady=15)
 
-        status_widget = tk.Text(text_frame, bg="#1e1e1e", fg="white", font=self.stats_font, wrap='word', bd=0, highlightthickness=0)
+        status_widget = tk.Text(text_frame, bg=self.colors["bg_widget"], fg=self.colors["fg_normal"], font=self.stats_font, wrap='word', bd=0, highlightthickness=0)
         status_widget.insert(tk.END, status_texto)
         status_widget.config(state='disabled')
         status_widget.pack(side='left', expand=True, fill='both')
 
-        scrollbar = tk.Scrollbar(text_frame, command=status_widget.yview)
+        scrollbar = tk.Scrollbar(text_frame, command=status_widget.yview, relief='flat')
         scrollbar.pack(side='right', fill='y')
         status_widget.config(yscrollcommand=scrollbar.set)
 
-        tk.Button(popup, text="Fechar", command=popup.destroy, font=self.button_font, bg='#4a4a4a', fg='white').pack(pady=10)
+        tk.Button(popup, text="Fechar", command=popup.destroy, font=self.button_font, bg=self.colors["accent"], fg='white', relief='flat').pack(pady=10)
 
         popup.transient(self.batalha_win)
         popup.grab_set()
@@ -333,54 +388,80 @@ class RPGApp:
         jogador = self.heroi_selecionado
         inimigo = self.inimigo_atual
         
-        self.heroi_stats_label.config(text=f"❤️ {jogador.vida_atual:<5.1f} / {jogador.vida_maxima:.1f}   🔮 {jogador.caos_atual:<5.1f} / {jogador.caos_maximo:.1f}")
-        self.inimigo_stats_label.config(text=f"❤️ {inimigo.vida_atual:<5.1f} / {inimigo.vida_maxima:.1f}")
+        heroi_status_lines = [
+            f"❤️ {jogador.vida_atual:<5.1f} / {jogador.vida_maxima:.1f}",
+            f"🔮 {jogador.caos_atual:<5.1f} / {jogador.caos_maximo:.1f}",
+            f"💪 {jogador.forca:<5.1f}  🛡️ {jogador.defesa:<5.1f}  👟 {jogador.agilidade:<5.1f}"
+        ]
+        if jogador.buffs_ativos:
+            heroi_status_lines.append(" ".join([f"⬆️{k[0].upper()}" for k in jogador.buffs_ativos.keys()]))
+        if jogador.efeitos_status:
+            heroi_status_lines.append(" ".join([f"⬇️{k[0].upper()}" for k in jogador.efeitos_status.keys()]))
+        
+        self.heroi_stats_label.config(text="\n".join(heroi_status_lines))
+        
+        inimigo_status_lines = [
+            f"❤️ {inimigo.vida_atual:<5.1f} / {inimigo.vida_maxima:.1f}",
+            f"💪 {inimigo.forca:<5.1f}  🛡️ {inimigo.defesa:<5.1f}  👟 {inimigo.agilidade:<5.1f}"
+        ]
+        if inimigo.efeitos_status:
+            inimigo_status_lines.append(" ".join([f"⬇️{k[0].upper()}" for k in inimigo.efeitos_status.keys()]))
+
+        self.inimigo_stats_label.config(text="\n".join(inimigo_status_lines))
 
     def log_batalha(self, msg):
         """Adds a message to the battle log."""
         if self.log_text_widget and self.log_text_widget.winfo_exists():
+            self.log_text_widget.config(state='normal')
             self.log_text_widget.insert(tk.END, msg + "\n")
             self.log_text_widget.see(tk.END)
+            self.log_text_widget.config(state='disabled')
 
-    def atualizar_botoes_acao(self):
+    def atualizar_botoes_acao(self, state='normal'):
         """Updates the state of action buttons based on game state."""
         if not self.botoes_acao_frame or not self.botoes_acao_frame.winfo_exists():
             return
         
         try:
-            jogador = self.heroi_selecionado
-            habilidade = rpg_dinamico.CLASSES_BASE[jogador.classe]['habilidade']
-            
-            btn_habilidade = self.botoes_acao_frame.grid_slaves(row=0, column=1)[0]
-            btn_pocao = self.botoes_acao_frame.grid_slaves(row=0, column=2)[0]
-
             for child in self.botoes_acao_frame.winfo_children():
-                child.config(state='normal')
+                child.config(state=state)
 
-            if jogador.caos_atual < habilidade['custo']:
-                btn_habilidade.config(state='disabled')
+            if state == 'normal':
+                jogador = self.heroi_selecionado
+                btn_habilidade = self.botoes_acao_frame.grid_slaves(row=0, column=1)[0]
+                btn_pocao = self.botoes_acao_frame.grid_slaves(row=0, column=2)[0]
 
-            if not jogador.inventario_pocoes:
-                btn_pocao.config(state='disabled')
+                if not rpg_dinamico.CLASSES_BASE[jogador.classe]['habilidades']:
+                    btn_habilidade.config(state='disabled')
+                if not jogador.inventario_pocoes:
+                    btn_pocao.config(state='disabled')
         except (IndexError, tk.TclError):
             pass # Window or widgets might be closing
 
-    def desabilitar_todos_botoes_acao(self):
-        """Disables all action buttons, usually during an action."""
-        if not self.botoes_acao_frame or not self.botoes_acao_frame.winfo_exists():
-            return
-        for child in self.botoes_acao_frame.winfo_children():
-            child.config(state='disabled')
+    def turno_do_jogador_inicio(self):
+        """Processes start-of-turn effects for the player."""
+        self.log_batalha("-" * 20)
+        self.heroi_selecionado.processar_efeitos_e_buffs(self.log_batalha)
+        self.atualizar_status_batalha()
+        if self.verificar_fim_batalha(): return
 
-    def turno_jogador(self, acao_jogador):
+        if 'congelado' in self.heroi_selecionado.efeitos_status:
+            self.log_batalha(f"🥶 {self.heroi_selecionado.nome} está congelado e perde o turno!")
+            self.master.after(1500, self.turno_inimigo)
+        else:
+            self.log_batalha("Sua vez de agir!")
+            self.atualizar_botoes_acao('normal')
+
+
+    def turno_jogador_fim(self, acao_jogador):
         """A generic handler for a player's turn with error handling."""
         try:
-            self.desabilitar_todos_botoes_acao()
-            acao_jogador()
+            self.atualizar_botoes_acao('disabled')
+            acao_jogador() # Execute the chosen action
             self.atualizar_status_batalha()
             if self.verificar_fim_batalha():
                 return
-            self.master.after(1000, self.turno_inimigo)
+            self.master.after(1500, self.turno_inimigo)
         except Exception as e:
             traceback.print_exc()
             messagebox.showerror("Erro Crítico", f"Ocorreu um erro no turno do jogador:\n{e}")
@@ -389,10 +470,37 @@ class RPGApp:
             self.tela_inicial()
 
     def acao_ataque(self):
-        self.turno_jogador(lambda: self.heroi_selecionado.atacar(self.inimigo_atual, self.log_batalha))
+        self.turno_jogador_fim(lambda: self.heroi_selecionado.atacar(self.inimigo_atual, self.log_batalha))
 
-    def acao_habilidade(self):
-        self.turno_jogador(lambda: self.heroi_selecionado.usar_habilidade(self.inimigo_atual, self.log_batalha))
+    def acao_habilidade_menu(self):
+        jogador = self.heroi_selecionado
+        habilidades = rpg_dinamico.CLASSES_BASE[jogador.classe]['habilidades']
+
+        popup = tk.Toplevel(self.batalha_win)
+        popup.title("Escolher Habilidade")
+        popup.geometry("500x300")
+        popup.configure(bg=self.colors["bg_frame"])
+        
+        tk.Label(popup, text="Escolha uma habilidade:", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"], font=self.label_font).pack(pady=10)
+
+        def usar(habilidade):
+            if jogador.caos_atual < habilidade['custo']:
+                messagebox.showwarning("Sem Caos", "Você não tem Caos suficiente para usar esta habilidade.", parent=popup)
+                return
+
+            popup.destroy()
+            self.turno_jogador_fim(lambda: jogador.usar_habilidade(self.inimigo_atual, habilidade, self.log_batalha))
+
+        for hab in habilidades:
+            btn_text = f"{hab['nome']} (Custo: {hab['custo']})\n{hab['desc']}"
+            btn = tk.Button(popup, text=btn_text, command=lambda h=hab: usar(h),
+                            wraplength=380, justify='left', bg=self.colors["bg_frame"], fg=self.colors["fg_normal"], font=self.default_font, relief='flat')
+            if jogador.caos_atual < hab['custo']:
+                btn.config(state='disabled', bg=self.colors["bg_widget"], fg=self.colors["disabled"])
+            btn.pack(fill='x', padx=10, pady=5)
+        
+        popup.transient(self.batalha_win)
+        popup.grab_set()
 
     def acao_pocao(self):
         if not self.heroi_selecionado.inventario_pocoes:
@@ -401,42 +509,51 @@ class RPGApp:
 
         popup = tk.Toplevel(self.batalha_win)
         popup.title("Usar Poção")
-        popup.configure(bg="#3d3d3d")
+        popup.geometry("400x300")
+        popup.configure(bg=self.colors["bg_frame"])
         
-        tk.Label(popup, text="Escolha uma poção para usar:", fg="white", bg="#3d3d3d").pack(pady=10)
+        tk.Label(popup, text="Escolha uma poção para usar:", fg=self.colors["fg_normal"], bg=self.colors["bg_frame"]).pack(pady=10)
 
-        def usar(pocao, index):
+        def usar(pocao_index):
             popup.destroy()
-            self.turno_jogador(lambda: self.heroi_selecionado.usar_pocao(index, self.log_batalha))
+            self.turno_jogador_fim(lambda: self.heroi_selecionado.usar_pocao(pocao_index, self.log_batalha))
 
         for i, pocao in enumerate(self.heroi_selecionado.inventario_pocoes):
-            tk.Button(popup, text=str(pocao), command=lambda p=pocao, idx=i: usar(p, idx),
-                      wraplength=380, justify='left', bg="#4a4a4a", fg="white").pack(fill='x', padx=10, pady=5)
+            tk.Button(popup, text=str(pocao), command=lambda idx=i: usar(idx),
+                      wraplength=380, justify='left', bg=self.colors["bg_frame"], fg=self.colors["fg_normal"], relief='flat').pack(fill='x', padx=10, pady=5)
         
         popup.transient(self.batalha_win)
         popup.grab_set()
 
     def acao_fugir(self):
-        self.desabilitar_todos_botoes_acao()
+        self.atualizar_botoes_acao('disabled')
         chance = 50 + (self.heroi_selecionado.agilidade - self.inimigo_atual.agilidade)
         if rpg_dinamico.random.randint(1, 100) <= chance:
             self.log_batalha("Você fugiu com sucesso!")
-            self.master.after(1000, lambda: messagebox.showinfo("Fuga", "Você conseguiu escapar da batalha, mas não da masmorra."))
-            self.master.after(1000, self.derrota_masmorra)
+            self.master.after(1500, lambda: messagebox.showinfo("Fuga", "Você conseguiu escapar da batalha."))
+            self.master.after(1500, self.fuga_masmorra)
         else:
             self.log_batalha("Fuga falhou!")
-            self.master.after(1000, self.turno_inimigo)
+            self.master.after(1500, self.turno_inimigo)
 
     def turno_inimigo(self):
         """Handles the enemy's turn with error handling."""
         try:
             if self.inimigo_atual.esta_vivo():
                 self.log_batalha("-" * 20)
-                self.inimigo_atual.atacar(self.heroi_selecionado, self.log_batalha)
+                self.inimigo_atual.processar_efeitos_e_buffs(self.log_batalha)
                 self.atualizar_status_batalha()
-                if not self.verificar_fim_batalha():
-                    self.atualizar_botoes_acao()
-                    self.log_batalha("Sua vez de agir!")
+                if self.verificar_fim_batalha(): return
+
+                if 'congelado' in self.inimigo_atual.efeitos_status:
+                    self.log_batalha(f"🥶 {self.inimigo_atual.nome} está congelado e não pode atacar!")
+                else:
+                    self.inimigo_atual.atacar(self.heroi_selecionado, self.log_batalha)
+                
+                self.atualizar_status_batalha()
+                if self.verificar_fim_batalha(): return
+                
+                self.master.after(1000, self.turno_do_jogador_inicio)
         except Exception as e:
             traceback.print_exc()
             messagebox.showerror("Erro Crítico", f"Ocorreu um erro no turno do inimigo:\n{e}")
@@ -451,11 +568,11 @@ class RPGApp:
 
         if not inimigo.esta_vivo():
             self.log_batalha(f"🎉 Você venceu a batalha contra {inimigo.nome}!")
-            self.master.after(1000, self.vitoria_batalha)
+            self.master.after(1500, self.vitoria_batalha)
             return True
         elif not jogador.esta_vivo():
             self.log_batalha("❌ Você foi derrotado!")
-            self.master.after(1000, self.derrota_masmorra)
+            self.master.after(1500, self.derrota_masmorra)
             return True
         return False
 
@@ -467,18 +584,35 @@ class RPGApp:
         jogador = self.heroi_selecionado
         inimigo = self.inimigo_atual
         
+        jogador.buffs_ativos = {}
+        jogador.efeitos_status = {}
+        
         xp_ganho = inimigo.nivel * 5 + rpg_dinamico.random.randint(1, 5)
         nivel_antes = jogador.nivel
-        jogador.ganhar_xp(xp_ganho, self.log_batalha)
+        jogador.ganhar_xp(xp_ganho)
         messagebox.showinfo("Vitória!", f"Você ganhou {xp_ganho} de XP!")
         
         if jogador.nivel > nivel_antes:
-            self.tela_distribuir_pontos(jogador, rpg_dinamico.PONTOS_POR_NIVEL)
+            messagebox.showinfo("Level Up!", f"🎉 {jogador.nome} alcançou o Nível {jogador.nivel}! 🎉")
+            self.tela_distribuir_pontos(jogador, rpg_dinamico.PONTOS_POR_NIVEL, is_creation=False, on_close_callback=self.mostrar_recompensa_visual)
+        else:
+            self.mostrar_recompensa_visual()
+
+    def fuga_masmorra(self):
+        """Handles the consequences of fleeing a battle."""
+        if self.batalha_win and self.batalha_win.winfo_exists():
+            self.batalha_win.destroy()
+
+        jogador = self.heroi_selecionado
+        xp_perdido = (jogador.xp_atual * rpg_dinamico.PENALIDADE_XP_MORTE) / 2 # Perde metade da penalidade normal
+        jogador.xp_atual -= xp_perdido
         
-        self.mostrar_recompensa_visual()
+        messagebox.showinfo("Fuga da Masmorra", f"Você fugiu da masmorra!\nPerdeu {xp_perdido:.0f} de XP, mas manteve sua vida.")
+        self.tela_inicial()
+
 
     def derrota_masmorra(self):
-        """Handles the consequences of losing a battle or fleeing."""
+        """Handles the consequences of losing a battle."""
         if self.batalha_win and self.batalha_win.winfo_exists():
             self.batalha_win.destroy()
 
@@ -497,17 +631,34 @@ class RPGApp:
 
     def vitoria_masmorra(self):
         """Handles winning the entire dungeon."""
-        messagebox.showinfo("Vitória!", "🏆 Você conquistou a masmorra! 🏆\nO herói descansará e voltará mais forte.")
-        self.tela_inicial()
+        messagebox.showinfo("Vitória!", "🏆 Você conquistou a masmorra! 🏆\nPrepare-se para um novo desafio ainda maior!")
+        self.total_andares += 1
+        self.iniciar_masmorra()
 
     def mostrar_recompensa_visual(self):
         """Displays the reward selection window."""
         popup = tk.Toplevel(self.master)
         popup.title("Recompensa da Batalha")
-        popup.configure(bg="#3d3d3d")
+        popup.geometry("1200x600")
+        popup.configure(bg=self.colors["bg_frame"])
         
         jogador = self.heroi_selecionado
-        tk.Label(popup, text="Escolha sua recompensa:", font=self.label_font, fg="white", bg="#3d3d3d").pack(pady=10)
+
+        main_frame = tk.Frame(popup, bg=self.colors["bg_frame"])
+        main_frame.pack(expand=True, fill='both', padx=10, pady=10)
+
+        status_panel = tk.Frame(main_frame, bg=self.colors["bg_widget"])
+        status_panel.pack(side='left', expand=True, fill='both', padx=(0, 5))
+        
+        status_text = tk.Text(status_panel, bg=self.colors["bg_widget"], fg=self.colors["fg_normal"], font=self.stats_font, wrap='word', bd=0, highlightthickness=0)
+        status_text.pack(expand=True, fill='both', padx=10, pady=10)
+        status_text.insert(tk.END, jogador.get_status_texto_com_itens())
+        status_text.config(state='disabled')
+
+        rewards_panel = tk.Frame(main_frame, bg=self.colors["bg_frame"])
+        rewards_panel.pack(side='left', fill='y', padx=(5, 0), ipadx=10)
+
+        tk.Label(rewards_panel, text="Escolha sua recompensa:", font=self.label_font, fg=self.colors["fg_normal"], bg=self.colors["bg_frame"]).pack(pady=10)
         recompensas = [rpg_dinamico.gerar_recompensa_aleatoria(jogador.nivel) for _ in range(3)]
 
         def proximo_passo():
@@ -519,10 +670,13 @@ class RPGApp:
                 self.proximo_andar()
 
         def selecionar_item(item, button):
-            button.config(state='disabled') # Disable button after selection
+            for child in rewards_panel.winfo_children():
+                if isinstance(child, tk.Button):
+                    child.config(state='disabled')
+
             if isinstance(item, rpg_dinamico.Equipamento):
                 if messagebox.askyesno("Equipar Item?", f"Deseja equipar o novo item?\n\nNOVO: {item}\nATUAL: {jogador.equipamentos.get(item.slot) or 'Nada'}", parent=popup):
-                    jogador.equipar_item(item, self.log_batalha)
+                    jogador.equipar_item(item)
                     messagebox.showinfo("Equipado", f"{item.nome_formatado()} foi equipado.", parent=popup)
                 else:
                     messagebox.showinfo("Item Ignorado", "Você decidiu não equipar o item.", parent=popup)
@@ -537,11 +691,11 @@ class RPGApp:
             proximo_passo()
 
         for item in recompensas:
-            btn = tk.Button(popup, text=str(item), wraplength=380, justify='left', bg="#4a4a4a", fg="white")
+            btn = tk.Button(rewards_panel, text=str(item), wraplength=380, justify='left', bg=self.colors["bg_frame"], fg=self.colors["fg_normal"], relief='flat')
             btn.config(command=lambda i=item, b=btn: selecionar_item(i, b))
             btn.pack(fill='x', padx=10, pady=5)
 
-        tk.Button(popup, text="Não quero nenhum item.", command=proximo_passo, bg="#4a4a4a", fg="white").pack(pady=10)
+        tk.Button(rewards_panel, text="Não quero nenhum item.", command=proximo_passo, bg=self.colors["bg_frame"], fg=self.colors["fg_danger"], relief='flat').pack(pady=10)
 
         popup.protocol("WM_DELETE_WINDOW", proximo_passo)
         popup.transient(self.master)
@@ -555,107 +709,106 @@ if __name__ == "__main__":
         avoiding the need to change the original file. This makes the logic
         compatible with the GUI without altering the console version.
         """
-        def patched_nome_formatado(self):
-            icone = "✨" if self.raridade == "raro" else "🔹" if self.raridade == "incomum" else ""
-            return f"{self.nome} [{self.raridade.capitalize()}] {icone}".strip()
-        rpg_dinamico.Item.nome_formatado = patched_nome_formatado
+        rpg_dinamico.Item.nome_formatado = lambda self: f"{self.nome} [{self.raridade.capitalize()}] {'✨' if self.raridade == 'raro' else ''}".strip()
+        
+        def patched_equip_str(self):
+            bonus = [f"{b:+.1f} {s}" for s,b in [("FOR",self.bonus_forca), ("DEF",self.bonus_defesa), ("AGI",self.bonus_agilidade), ("VIDA",self.bonus_vida), ("CAOS", self.bonus_caos)] if b]
+            return f"{self.nome_formatado()} ({', '.join(bonus)})"
+        rpg_dinamico.Equipamento.__str__ = patched_equip_str
 
-        def patched_get_status_texto(self):
-            status_lines = []
-            status_lines.append(f"--- STATUS: {self.nome} - O {self.classe.capitalize()} (Nível {self.nivel}) ---")
-            status_lines.append(f"❤️ Vida: {self.vida_atual:.1f} / {self.vida_maxima:.1f}")
-            status_lines.append(f"🔮 Caos: {self.caos_atual:.1f} / {self.caos_maximo:.1f}")
-            
-            if self.nivel < 5:
-                status_lines.append(f"📊 XP: {self.xp_atual:.0f} / {self.xp_proximo_nivel}")
-            else:
-                status_lines.append("📊 XP: MÁXIMO")
-
-            status_lines.append("\n--- Atributos Totais (com Equipamentos) ---")
-            status_lines.append(f"💪 Força: {self.forca:.1f} | 🛡️ Defesa: {self.defesa:.1f} | 👟 Agilidade: {self.agilidade:.1f}")
-
-            status_lines.append("\n--- Equipamentos ---")
+        def patched_get_status_texto_com_itens(self):
+            lines = []
+            lines.append(f"--- {self.nome} (Nível {self.nivel}) ---")
+            lines.append(f"❤️ Vida: {self.vida_atual:.1f} / {self.vida_maxima:.1f}")
+            lines.append(f"🔮 Caos: {self.caos_atual:.1f} / {self.caos_maximo:.1f}")
+            if self.nivel < 5: lines.append(f"📊 XP: {self.xp_atual:.0f} / {self.xp_proximo_nivel}")
+            else: lines.append("📊 XP: MÁXIMO")
+            lines.append("\n--- Atributos Totais ---")
+            lines.append(f"💪 Força: {self.forca:.1f}")
+            lines.append(f"🛡️ Defesa: {self.defesa:.1f}")
+            lines.append(f"👟 Agilidade: {self.agilidade:.1f}")
+            lines.append("\n--- Equipamentos ---")
             for slot, item in self.equipamentos.items():
-                item_str = item.nome_formatado() if item else 'Vazio'
-                status_lines.append(f"   - {slot.capitalize()}: {item_str}")
+                item_str = str(item) if item else 'Vazio'
+                lines.append(f"   - {slot.capitalize()}: {item_str}")
+            lines.append("\n--- Inventário de Poções ---")
+            if self.inventario_pocoes: [lines.append(f"   - {pocao}") for pocao in self.inventario_pocoes]
+            else: lines.append("   Vazio")
+            if self.buffs_ativos: lines.append("\n--- Buffs Ativos ---"); lines.append("   " + ", ".join([f"{data['valor']:.1f} {tipo.upper()} ({data['turnos_restantes']}t)" for tipo, data in self.buffs_ativos.items()]))
+            if self.efeitos_status: lines.append("\n--- Efeitos de Status ---"); lines.append("   " + ", ".join([f"{tipo.upper()} ({data['turnos_restantes']}t)" for tipo, data in self.efeitos_status.items()]))
+            return "\n".join(lines)
+        rpg_dinamico.Heroi.get_status_texto_com_itens = patched_get_status_texto_com_itens
 
-            status_lines.append("\n--- Inventário de Poções ---")
-            if self.inventario_pocoes:
-                for pocao in self.inventario_pocoes:
-                    status_lines.append(f"   - {pocao}")
-            else:
-                status_lines.append("   Vazio")
-            
-            if self.buffs_ativos:
-                status_lines.append("\n--- Buffs Ativos ---")
-                buff_str = ", ".join([f"{data['valor']:.1f} {tipo.upper()} ({data['turnos_restantes']}t)" for tipo, data in self.buffs_ativos.items()])
-                status_lines.append(f"   {buff_str}")
+        def patched_processar_efeitos(self, logger=print):
+            for tipo, data in list(self.buffs_ativos.items()):
+                data['turnos_restantes'] -= 1
+                if data['turnos_restantes'] <= 0: logger(f"O efeito do buff de {tipo.upper()} em {self.nome} acabou."); del self.buffs_ativos[tipo]
+            for tipo, data in list(self.efeitos_status.items()):
+                if tipo == 'veneno':
+                    dano_veneno = data['dano']
+                    logger(f"🐍 {self.nome} sofre {dano_veneno:.1f} de dano de veneno.")
+                    self.receber_dano(dano_veneno)
+                data['turnos_restantes'] -= 1
+                if data['turnos_restantes'] <= 0: logger(f"O efeito de {tipo.upper()} em {self.nome} acabou."); del self.efeitos_status[tipo]
+        rpg_dinamico.Personagem.processar_efeitos_e_buffs = patched_processar_efeitos
 
-            return "\n".join(status_lines)
-        rpg_dinamico.Heroi.get_status_texto = patched_get_status_texto
+        def patched_atacar(self, alvo, logger=print):
+            logger(f"💥 {self.nome} usa um Ataque Básico contra {alvo.nome}!")
+            chance_acerto = 90 - (alvo.agilidade - self.agilidade); chance_acerto = max(20, min(100, chance_acerto))
+            if rpg_dinamico.random.randint(1, 100) > chance_acerto: logger(f"   💨 ERROU!"); return
+            reducao_de_dano = alvo.defesa * 0.3; dano = max(1.0, self.forca - reducao_de_dano)
+            logger(f"   🎯 Acertou! Dano Físico: {dano:.1f}!"); alvo.receber_dano(dano)
+        rpg_dinamico.Personagem.atacar = patched_atacar
 
-        def patched_atacar_personagem(self, alvo, logger=print):
-            logger(f"\n💥 {self.nome} usa um Ataque Básico contra {alvo.nome}!")
-            chance_acerto = 90 - (alvo.agilidade - self.agilidade)
-            chance_acerto = max(20, min(100, chance_acerto))
-            if rpg_dinamico.random.randint(1, 100) > chance_acerto:
-                logger(f"   💨 ERROU!")
-                return
-            reducao_de_dano = alvo.defesa * 0.3
-            dano = max(1.0, self.forca - reducao_de_dano)
-            logger(f"   🎯 Acertou! Dano Físico causado: {dano:.1f}!")
-            alvo.receber_dano(dano)
-        rpg_dinamico.Personagem.atacar = patched_atacar_personagem
-
-        def patched_usar_habilidade(self, alvo, logger=print):
-            habilidade = rpg_dinamico.CLASSES_BASE[self.classe]['habilidade']
-            custo = habilidade['custo']
-            if self.caos_atual < custo:
-                logger("Caos insuficiente para usar esta habilidade!")
-                return False
-            self.caos_atual -= custo
-            multiplicador = habilidade['multiplicador'] + self.proficiencia
-            dano_magico = self.forca * multiplicador
-            logger(f"\n✨ {self.nome} usa {habilidade['nome']}!")
-            logger(f"   Dano Mágico causado: {dano_magico:.1f}! (Ignora defesa)")
-            alvo.receber_dano(dano_magico)
+        def patched_usar_habilidade(self, alvo, habilidade, logger=print):
+            self.caos_atual -= habilidade['custo']; multiplicador = habilidade['multiplicador'] + self.proficiencia; dano_magico = self.forca * multiplicador
+            logger(f"✨ {self.nome} usa {habilidade['nome']}!")
+            if dano_magico > 0: logger(f"   Dano Mágico: {dano_magico:.1f}!"); alvo.receber_dano(dano_magico)
+            efeito = habilidade.get('efeito')
+            if efeito and rpg_dinamico.random.random() < efeito['chance']:
+                if efeito['tipo'] in ['veneno', 'congelado']:
+                    logger(f"   🎯 O alvo foi afetado por {efeito['tipo'].upper()}!")
+                    alvo.efeitos_status[efeito['tipo']] = {'turnos_restantes': efeito['duracao'] + 1, 'dano': efeito.get('dano', 0)}
+                elif efeito['tipo'] == 'buff_forca':
+                    logger(f"   💪 Você se sente mais forte!")
+                    self.buffs_ativos['forca'] = {'valor': efeito['valor'], 'turnos_restantes': efeito['duracao'] + 1}
             return True
         rpg_dinamico.Heroi.usar_habilidade = patched_usar_habilidade
 
         def patched_usar_pocao(self, pocao_index, logger=print):
             pocao = self.inventario_pocoes.pop(pocao_index)
-            logger(f"\nVocê usou {pocao.nome_formatado()}!")
+            logger(f"Você usou {pocao.nome_formatado()}!")
             if pocao.tipo == 'cura':
                 vida_curada = min(self.vida_maxima - self.vida_atual, pocao.valor)
                 self.vida_atual += vida_curada
-                logger(f"   Você recuperou {vida_curada:.1f} de vida.")
+                logger(f"   Recuperou {vida_curada:.1f} de vida.")
+            elif pocao.tipo == 'restaura_caos':
+                caos_recuperado = min(self.caos_maximo - self.caos_atual, pocao.valor)
+                self.caos_atual += caos_recuperado
+                logger(f"   Recuperou {caos_recuperado:.1f} de caos.")
             else:
                 tipo_buff = pocao.tipo.split('_')[1]
                 self.buffs_ativos[tipo_buff] = {'valor': pocao.valor, 'turnos_restantes': pocao.duracao + 1}
-                logger(f"   Seu atributo {tipo_buff.upper()} aumentou em {pocao.valor:.1f} por {pocao.duracao} turnos!")
+                logger(f"   Seu {tipo_buff.upper()} aumentou em {pocao.valor:.1f} por {pocao.duracao} turnos!")
         rpg_dinamico.Heroi.usar_pocao = patched_usar_pocao
         
-        def patched_ganhar_xp(self, quantidade, logger=print):
+        def patched_ganhar_xp(self, quantidade):
             if self.nivel >= 5: return
             self.xp_atual += quantidade
-            logger(f"✨ Você ganhou {quantidade} de XP! ({self.xp_atual:.0f}/{self.xp_proximo_nivel})")
             while self.xp_atual >= self.xp_proximo_nivel and self.nivel < 5:
                 xp_excedente = self.xp_atual - self.xp_proximo_nivel
                 self.nivel += 1
                 self.xp_atual = xp_excedente
                 self.xp_proximo_nivel = rpg_dinamico.XP_PARA_NIVEL.get(self.nivel, float('inf'))
                 self.proficiencia += 0.05
-                self.vida_base += 2
-                self.caos_base += 2
-                logger(f"🎉🎉🎉 LEVEL UP! Você alcançou o Nível {self.nivel}! 🎉🎉🎉")
+                self.vida_base += 20
+                self.caos_base += 10
         rpg_dinamico.Heroi.ganhar_xp = patched_ganhar_xp
 
-        def patched_equipar_item(self, novo_equip, logger=print):
-            item_atual = self.equipamentos[novo_equip.slot]
+        def patched_equipar_item(self, novo_equip):
+            item_atual = self.equipamentos.get(novo_equip.slot)
             bonus_vida_antigo = item_atual.bonus_vida if item_atual else 0.0
             bonus_caos_antigo = item_atual.bonus_caos if item_atual else 0.0
-            if item_atual:
-                logger(f"   Substituindo {item_atual.nome_formatado()}...")
             self.equipamentos[novo_equip.slot] = novo_equip
             delta_vida = novo_equip.bonus_vida - bonus_vida_antigo
             delta_caos = novo_equip.bonus_caos - bonus_caos_antigo
@@ -663,8 +816,8 @@ if __name__ == "__main__":
             self.caos_atual += delta_caos
             self.vida_atual = min(self.vida_maxima, self.vida_atual)
             self.caos_atual = min(self.caos_maximo, self.caos_atual)
-            logger(f"   {self.nome} equipou {novo_equip.nome_formatado()}.")
         rpg_dinamico.Heroi.equipar_item = patched_equipar_item
+
 
     patch_rpg_dinamico()
     root = tk.Tk()

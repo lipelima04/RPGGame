@@ -3,7 +3,7 @@ import os
 import random
 import time
 
-# --- CONSTANTES DE CONFIGURAÇÃO DO JOGO --- daniel
+# --- CONSTANTES DE CONFIGURAÇÃO DO JOGO ---
 XP_PARA_NIVEL = {1: 10, 2: 25, 3: 50, 4: 80, 5: float('inf')}
 PONTOS_DISTRIBUICAO_INICIAL = 15
 PONTOS_POR_NIVEL = 5
@@ -18,15 +18,39 @@ RARIDADES = {
 }
 COR_RESET = "\033[0m"
 
+# --- BANCO DE DADOS DE HABILIDADES E CLASSES ---
 CLASSES_BASE = {
-    "Feral": {"desc": "Usa o Caos para fortalecer seus ataques físicos.", "stats": {"vida_base": 50, "forca_base": 15, "defesa_base": 10, "agilidade_base": 10, "caos_base": 40}, "habilidade": {"nome": "Impacto do Caos", "custo": 8, "multiplicador": 1.35}},
-    "Sombra": {"desc": "Usa o Caos para golpes rápidos e eficientes.", "stats": {"vida_base": 60, "forca_base": 10, "defesa_base": 5, "agilidade_base": 15, "caos_base": 40}, "habilidade": {"nome": "Lâmina do Caos", "custo": 4, "multiplicador": 1.20}},
-    "Moldador de Essência": {"desc": "Transforma sua força vital em poder mágico devastador.", "stats": {"vida_base": 45, "forca_base": 20, "defesa_base": 10, "agilidade_base": 10, "caos_base": 60}, "habilidade": {"nome": "Orbe do Caos", "custo": 12, "multiplicador": 1.50}}
+    "Feral": {
+        "desc": "Usa o Caos para fortalecer seus ataques físicos.",
+        "stats": {"vida_base": 50, "forca_base": 15, "defesa_base": 10, "agilidade_base": 10, "caos_base": 40},
+        "habilidades": [
+            {"nome": "Impacto do Caos", "custo": 8, "multiplicador": 1.35, "efeito": None, "desc": "Um golpe poderoso que ignora a defesa."},
+            {"nome": "Fúria Selvagem", "custo": 6, "multiplicador": 0, "efeito": {"tipo": "buff_forca", "valor": 5, "duracao": 3, "chance": 1.0}, "desc": "Aumenta sua própria Força por 3 turnos."}
+        ]
+    },
+    "Sombra": {
+        "desc": "Usa o Caos para golpes rápidos e eficientes.",
+        "stats": {"vida_base": 60, "forca_base": 10, "defesa_base": 5, "agilidade_base": 15, "caos_base": 40},
+        "habilidades": [
+            {"nome": "Lâmina do Caos", "custo": 4, "multiplicador": 1.20, "efeito": None, "desc": "Um ataque mágico rápido e de baixo custo."},
+            {"nome": "Névoa Venenosa", "custo": 10, "multiplicador": 0.5, "efeito": {"tipo": "veneno", "dano": 5, "duracao": 3, "chance": 1.0}, "desc": "Causa dano inicial e dano de veneno por 3 turnos."}
+        ]
+    },
+    "Moldador de Essência": {
+        "desc": "Transforma sua força vital em poder mágico devastador.",
+        "stats": {"vida_base": 45, "forca_base": 20, "defesa_base": 10, "agilidade_base": 10, "caos_base": 60},
+        "habilidades": [
+            {"nome": "Orbe do Caos", "custo": 12, "multiplicador": 1.50, "efeito": None, "desc": "Uma esfera de energia mágica de alto dano."},
+            {"nome": "Raio Congelante", "custo": 15, "multiplicador": 0.8, "efeito": {"tipo": "congelado", "duracao": 2, "chance": 0.75}, "desc": "Causa dano e tem 75% de chance de congelar o alvo por 1 turno."}
+        ]
+    }
 }
+
 NOMES_EQUIPAMENTOS = { "arma": {"prefixos": ["Espada", "Machado"], "sufixos": ["Brutal", "Veloz"]}, "capacete": {"prefixos": ["Elmo", "Capacete"], "sufixos": ["da Guarda", "Sombrio"]}, "armadura": {"prefixos": ["Peitoral", "Cota de Malha"], "sufixos": ["de Placas", "Leve"]}, "calca": {"prefixos": ["Grevas", "Calças"], "sufixos": ["de Batalha", "do Viajante"]}, "bota": {"prefixos": ["Botas", "Coturno"], "sufixos": ["de Corrida", "Pesadas"]} }
 INIMIGO_TEMPLATES = { "Goblin Ladrão": {"vida": 20, "forca": 5, "defesa": 2, "agilidade": 8, "caos": 10}, "Orc Guerreiro": {"vida": 40, "forca": 10, "defesa": 5, "agilidade": 3, "caos": 5}, "Lobo das Neves": {"vida": 30, "forca": 8, "defesa": 3, "agilidade": 12, "caos": 15}, "Golem de Pedra": {"vida": 60, "forca": 12, "defesa": 10, "agilidade": 1, "caos": 0}, "Mago Esqueleto": {"vida": 25, "forca": 15, "defesa": 2, "agilidade": 6, "caos": 30} }
 CHEFE_TEMPLATES = { "Lich Tirano": {"vida": 150, "forca": 20, "defesa": 15, "agilidade": 10, "caos": 100}, "Behemoth Colossal": {"vida": 250, "forca": 30, "defesa": 25, "agilidade": 5, "caos": 20}, "Quimera Mutante": {"vida": 180, "forca": 25, "defesa": 10, "agilidade": 20, "caos": 50} }
-POCA_TEMPLATES = { "cura": {"nome": "Poção de Cura", "valor": 50}, "buff_forca": {"nome": "Elixir de Força", "valor": 5, "duracao": 3}, "buff_defesa": {"nome": "Poção Casca de Ferro", "valor": 5, "duracao": 3}, "buff_agilidade": {"nome": "Extrato de Agilidade", "valor": 5, "duracao": 3} }
+# MODIFICAÇÃO: Adicionada a Poção de Caos
+POCA_TEMPLATES = { "cura": {"nome": "Poção de Cura", "valor": 50}, "restaura_caos": {"nome": "Poção de Caos", "valor": 40}, "buff_forca": {"nome": "Elixir de Força", "valor": 5, "duracao": 3}, "buff_defesa": {"nome": "Poção Casca de Ferro", "valor": 5, "duracao": 3}, "buff_agilidade": {"nome": "Extrato de Agilidade", "valor": 5, "duracao": 3} }
 
 # --- CLASSES BASE (A ESTRUTURA DO JOGO) ---
 
@@ -46,6 +70,7 @@ class Pocao(Item):
         super().__init__(nome, raridade); self.tipo = tipo; self.valor = float(valor); self.duracao = duracao
     def __str__(self):
         if self.tipo == 'cura': return f"{self.nome_formatado()} (Cura {self.valor:.1f} de Vida)"
+        elif self.tipo == 'restaura_caos': return f"{self.nome_formatado()} (Restaura {self.valor:.1f} de Caos)"
         else: tipo_str = self.tipo.split('_')[1].upper(); return f"{self.nome_formatado()} (+{self.valor:.1f} {tipo_str} por {self.duracao} turnos)"
 
 class Personagem:
@@ -54,6 +79,7 @@ class Personagem:
         self.vida_atual = self.vida_base; self.caos_atual = self.caos_base
         self.equipamentos = {"arma": None, "capacete": None, "armadura": None, "calca": None, "bota": None}
         self.buffs_ativos = {}
+        self.efeitos_status = {}
 
     @property
     def forca(self): return self.forca_base + sum(eq.bonus_forca for eq in self.equipamentos.values() if eq) + self.buffs_ativos.get('forca', {'valor': 0})['valor']
@@ -67,6 +93,9 @@ class Personagem:
     def caos_maximo(self): return self.caos_base + sum(eq.bonus_caos for eq in self.equipamentos.values() if eq)
 
     def atacar(self, alvo):
+        if 'congelado' in self.efeitos_status:
+            print(f"🥶 {self.nome} está congelado e não pode se mover!"); time.sleep(1); return
+
         print(f"\n💥 {self.nome} usa um Ataque Básico contra {alvo.nome}!")
         time.sleep(1); chance_acerto = 90 - (alvo.agilidade - self.agilidade); chance_acerto = max(20, min(100, chance_acerto))
         if random.randint(1, 100) > chance_acerto: print(f"   💨 ERROU!"); time.sleep(1); return
@@ -76,14 +105,39 @@ class Personagem:
     def receber_dano(self, dano): self.vida_atual -= dano; self.vida_atual = max(0.0, self.vida_atual)
     def esta_vivo(self): return self.vida_atual > 0
 
+    def processar_efeitos_e_buffs(self):
+        for tipo, data in list(self.buffs_ativos.items()):
+            data['turnos_restantes'] -= 1
+            if data['turnos_restantes'] <= 0: print(f"O efeito do buff de {tipo.upper()} acabou."); del self.buffs_ativos[tipo]; time.sleep(1)
+        
+        for tipo, data in list(self.efeitos_status.items()):
+            if tipo == 'veneno':
+                dano_veneno = data['dano']
+                print(f"🐍 {self.nome} sofre {dano_veneno:.1f} de dano de veneno.")
+                self.receber_dano(dano_veneno); time.sleep(1)
+            
+            data['turnos_restantes'] -= 1
+            if data['turnos_restantes'] <= 0:
+                print(f"O efeito de {tipo.upper()} em {self.nome} acabou."); del self.efeitos_status[tipo]; time.sleep(1)
+
+
     def mostrar_status(self):
         classe_info = f"- O {self.classe.capitalize()} " if hasattr(self, 'classe') else ""
         print(f"--- STATUS: {self.nome} {classe_info}(Nível {self.nivel}) ---")
         print(f"❤️  Vida: {self.vida_atual:.1f} / {self.vida_maxima:.1f}  |  🔮 Caos: {self.caos_atual:.1f} / {self.caos_maximo:.1f}")
         print(f"💪 Força: {self.forca:.1f} | 🛡️ Defesa: {self.defesa:.1f} | 👟 Agilidade: {self.agilidade:.1f}")
+        
+        status_str_list = []
         if self.buffs_ativos:
             buff_str = ", ".join([f"{data['valor']:.1f} {tipo.upper()} ({data['turnos_restantes']}t)" for tipo, data in self.buffs_ativos.items()])
-            print(f"   BUFFS ATIVOS: {buff_str}")
+            status_str_list.append(f"BUFFS: {buff_str}")
+        if self.efeitos_status:
+            efeito_str = ", ".join([f"{tipo.upper()} ({data['turnos_restantes']}t)" for tipo, data in self.efeitos_status.items()])
+            status_str_list.append(f"EFEITOS: {efeito_str}")
+        
+        if status_str_list:
+            print(f"   ATIVOS: " + " | ".join(status_str_list))
+
 
 class Chefao(Personagem):
     def __init__(self, nome, vida_base, forca_base, defesa_base, agilidade_base, caos_base, nivel=1):
@@ -104,7 +158,10 @@ class Heroi(Personagem):
     def subir_de_nivel(self):
         xp_excedente = self.xp_atual - self.xp_proximo_nivel; self.nivel += 1; self.xp_atual = xp_excedente
         self.xp_proximo_nivel = XP_PARA_NIVEL.get(self.nivel, float('inf'))
-        self.proficiencia += 0.05; self.vida_base += 2; self.caos_base += 2
+        self.proficiencia += 0.05
+        # MODIFICAÇÃO: Aumento de vida e caos por nível
+        self.vida_base += 20
+        self.caos_base += 10
         limpar_tela()
         print("\n🎉🎉🎉 LEVEL UP! 🎉🎉🎉"); print(f"Você alcançou o Nível {self.nivel}!"); time.sleep(2)
         print(f"Sua proficiência com habilidades aumentou! Vida e Caos base também aumentaram.")
@@ -112,27 +169,44 @@ class Heroi(Personagem):
         self.vida_atual = self.vida_maxima; self.caos_atual = self.caos_maximo
         print("Seus atributos foram fortalecidos e sua Vida/Caos foram restaurados!"); time.sleep(3)
 
-    def usar_habilidade(self, alvo):
-        habilidade = CLASSES_BASE[self.classe]['habilidade']; custo = habilidade['custo']
+    def usar_habilidade(self, alvo, habilidade):
+        custo = habilidade['custo']
         if self.caos_atual < custo: print("Caos insuficiente para usar esta habilidade!"); time.sleep(2); return False
-        self.caos_atual -= custo; multiplicador = habilidade['multiplicador'] + self.proficiencia; dano_magico = self.forca * multiplicador
-        print(f"\n✨ {self.nome} usa {habilidade['nome']}!"); time.sleep(1)
-        print(f"   Dano Mágico causado: {dano_magico:.1f}! (Ignora defesa)"); alvo.receber_dano(dano_magico); time.sleep(1); return True
+        
+        self.caos_atual -= custo
+        multiplicador = habilidade['multiplicador'] + self.proficiencia
+        dano_magico = self.forca * multiplicador
+
+        print(f"\n✨ {self.nome} usa {habilidade['nome']}!")
+        time.sleep(1)
+        
+        if dano_magico > 0:
+            print(f"   Dano Mágico causado: {dano_magico:.1f}! (Ignora defesa)"); alvo.receber_dano(dano_magico)
+        
+        efeito = habilidade.get('efeito')
+        if efeito and random.random() < efeito['chance']:
+            if efeito['tipo'] in ['veneno', 'congelado']:
+                print(f"   � O alvo foi afetado por {efeito['tipo'].upper()}!")
+                alvo.efeitos_status[efeito['tipo']] = {'turnos_restantes': efeito['duracao'] + 1, 'dano': efeito.get('dano', 0)}
+            elif efeito['tipo'] == 'buff_forca':
+                print(f"   💪 Você se sente mais forte!")
+                self.buffs_ativos['forca'] = {'valor': efeito['valor'], 'turnos_restantes': efeito['duracao'] + 1}
+        
+        time.sleep(1); return True
 
     def usar_pocao(self, pocao_index):
         pocao = self.inventario_pocoes.pop(pocao_index); print(f"\nVocê usou {pocao.nome_formatado()}!")
         if pocao.tipo == 'cura':
             vida_curada = min(self.vida_maxima - self.vida_atual, pocao.valor); self.vida_atual += vida_curada
             print(f"   Você recuperou {vida_curada:.1f} de vida.")
+        # MODIFICAÇÃO: Lógica para a poção de caos
+        elif pocao.tipo == 'restaura_caos':
+            caos_recuperado = min(self.caos_maximo - self.caos_atual, pocao.valor); self.caos_atual += caos_recuperado
+            print(f"   Você recuperou {caos_recuperado:.1f} de caos.")
         else:
             tipo_buff = pocao.tipo.split('_')[1]; self.buffs_ativos[tipo_buff] = {'valor': pocao.valor, 'turnos_restantes': pocao.duracao + 1}
             print(f"   Seu atributo {tipo_buff.upper()} aumentou em {pocao.valor:.1f} por {pocao.duracao} turnos!")
         time.sleep(2)
-
-    def processar_buffs(self):
-        for tipo, data in list(self.buffs_ativos.items()):
-            data['turnos_restantes'] -= 1
-            if data['turnos_restantes'] <= 0: print(f"O efeito do buff de {tipo.upper()} acabou."); del self.buffs_ativos[tipo]; time.sleep(1)
 
     def avaliar_e_equipar_item(self, novo_equip):
         limpar_tela(); print("✨ AVALIANDO ITEM ✨"); print(f"Item novo: {novo_equip}"); item_atual = self.equipamentos[novo_equip.slot]
@@ -252,18 +326,47 @@ def usar_pocao_em_batalha(jogador):
             else: print("Escolha inválida.")
         except ValueError: print("Por favor, digite um número.")
 
+def menu_de_habilidades(jogador, inimigo):
+    habilidades = CLASSES_BASE[jogador.classe]['habilidades']
+    while True:
+        limpar_tela()
+        print("--- ESCOLHA UMA HABILIDADE ---")
+        for i, hab in enumerate(habilidades):
+            print(f"{i + 1}. {hab['nome']} (Custo: {hab['custo']} Caos) - {hab['desc']}")
+        print(f"{len(habilidades) + 1}. Voltar")
+
+        try:
+            escolha = int(input("> "))
+            if 1 <= escolha <= len(habilidades):
+                habilidade_escolhida = habilidades[escolha - 1]
+                if jogador.usar_habilidade(inimigo, habilidade_escolhida):
+                    return True 
+                else:
+                    return False 
+            elif escolha == len(habilidades) + 1:
+                return False
+            else:
+                print("Escolha inválida."); time.sleep(1)
+        except ValueError:
+            print("Entrada inválida."); time.sleep(1)
+
 def menu_de_ataque(jogador, inimigo):
-    habilidade = CLASSES_BASE[jogador.classe]['habilidade']
     while True:
         limpar_tela(); print("Escolha seu tipo de ataque:"); print("1. Ataque Básico (Dano Físico, usa Força vs Defesa)")
-        print(f"2. {habilidade['nome']} (Dano Mágico, custa {habilidade['custo']} de Caos)"); print("3. Voltar")
+        print(f"2. Habilidades de Classe (Usa Caos)"); print("3. Voltar")
         escolha = input("> ")
-        if escolha == '1': jogador.atacar(inimigo); return True
+        if escolha == '1': 
+            jogador.atacar(inimigo)
+            return True
         elif escolha == '2':
-            if jogador.usar_habilidade(inimigo): return True
-            else: return False
-        elif escolha == '3': return False
-        else: print("Opção inválida.")
+            if menu_de_habilidades(jogador, inimigo): 
+                return True 
+            else: 
+                continue 
+        elif escolha == '3': 
+            return False
+        else: 
+            print("Opção inválida.")
 
 def tela_de_recompensa(jogador):
     limpar_tela(); print("🏆 RECOMPENSAS DA BATALHA 🏆"); print("Você encontrou alguns tesouros! Escolha sabiamente:")
@@ -293,32 +396,43 @@ def iniciar_batalha(jogador, inimigo):
     while jogador.esta_vivo() and inimigo.esta_vivo():
         limpar_tela(); print(f"--- BATALHA: {jogador.nome} vs {inimigo.nome} ---"); jogador.mostrar_status(); print("\nVS\n"); inimigo.mostrar_status()
         
+        jogador.processar_efeitos_e_buffs()
+        if not jogador.esta_vivo(): break
+
         turno_usado = False
         while not turno_usado:
             print("\nSua vez de agir!"); acao = input("1. Atacar\n2. Usar Poção\n3. Tentar Fugir\n4. Ver Status Detalhado\n> ")
             if acao == "1":
-                if menu_de_ataque(jogador, inimigo): jogador.processar_buffs(); turno_usado = True
-            elif acao == "2": turno_usado = usar_pocao_em_batalha(jogador)
+                if menu_de_ataque(jogador, inimigo): turno_usado = True
+            elif acao == "2": 
+                if usar_pocao_em_batalha(jogador): turno_usado = True
             elif acao == "3":
                 chance_fuga = 50 + (jogador.agilidade - inimigo.agilidade); chance_fuga = max(10, min(90, chance_fuga))
                 print(f"\nTentando fugir... (Chance: {chance_fuga:.1f}%)"); time.sleep(1)
                 if random.randint(1, 100) <= chance_fuga: print("...Você conseguiu escapar!"); time.sleep(2); return "fugiu"
-                else: print("...A fuga falhou!"); turno_usado = True; jogador.processar_buffs()
-                if random.random() < CHANCE_QUEBRA_AO_FUGIR:
-                        itens_equipados = [s for s, e in jogador.equipamentos.items() if e]
-                        if itens_equipados: slot_quebrado = random.choice(itens_equipados); print(f"🔥 Oh não! Seu item '{jogador.equipamentos[slot_quebrado].nome_formatado()}' foi destruído!"); jogador.equipamentos[slot_quebrado] = None; time.sleep(2)
+                else: 
+                    print("...A fuga falhou!"); turno_usado = True
+                    if random.random() < CHANCE_QUEBRA_AO_FUGIR:
+                            itens_equipados = [s for s, e in jogador.equipamentos.items() if e]
+                            if itens_equipados: slot_quebrado = random.choice(itens_equipados); print(f"🔥 Oh não! Seu item '{jogador.equipamentos[slot_quebrado].nome_formatado()}' foi destruído!"); jogador.equipamentos[slot_quebrado] = None; time.sleep(2)
             elif acao == "4": jogador.mostrar_status_completo(); input("\nPressione ENTER para continuar..."); limpar_tela(); jogador.mostrar_status(); print("\nVS\n"); inimigo.mostrar_status()
             else: print("Ação inválida.")
         
         if not inimigo.esta_vivo(): break
+
+        inimigo.processar_efeitos_e_buffs()
+        if not inimigo.esta_vivo(): break
+
         inimigo.atacar(jogador)
         if not jogador.esta_vivo(): break
     
-    if jogador.esta_vivo(): print(f"\nVocê venceu a batalha contra {inimigo.nome}!"); time.sleep(1); xp_ganho = inimigo.nivel * 5 + random.randint(1, 5); jogador.ganhar_xp(xp_ganho); tela_de_recompensa(jogador); return "vitoria"
+    if jogador.esta_vivo(): 
+        jogador.buffs_ativos = {}; jogador.efeitos_status = {}
+        print(f"\nVocê venceu a batalha contra {inimigo.nome}!"); time.sleep(1); xp_ganho = inimigo.nivel * 5 + random.randint(1, 5); jogador.ganhar_xp(xp_ganho); tela_de_recompensa(jogador); return "vitoria"
     else: return "derrota"
 
-def iniciar_masmorra(jogador):
-    total_andares = 2 + jogador.nivel
+def iniciar_masmorra(jogador, andares_base=3):
+    total_andares = andares_base
     for andar_atual in range(1, total_andares + 1):
         limpar_tela(); print(f"--- MASMORRA - ANDAR {andar_atual}/{total_andares} ---"); inimigo = gerar_inimigo(jogador.nivel); input("Pressione ENTER para prosseguir..."); resultado_batalha = iniciar_batalha(jogador, inimigo)
         if resultado_batalha in ["derrota", "fugiu"]: return resultado_batalha
@@ -327,7 +441,7 @@ def iniciar_masmorra(jogador):
     return "venceu_masmorra" if resultado_chefe == "vitoria" else "perdeu_masmorra"
 
 def main():
-    heroi_selecionado = None; vidas_heroi = 3
+    heroi_selecionado = None; vidas_heroi = 3; andares_masmorra = 3
     while True:
         limpar_tela(); print("====== RPG DE MASMORRA ======"); print(f"Vidas restantes: {'❤️' * vidas_heroi if vidas_heroi > 0 else '☠️'}")
         if heroi_selecionado: print(f"Herói Ativo: {heroi_selecionado.nome} - {heroi_selecionado.classe.capitalize()} (Nível {heroi_selecionado.nivel})")
@@ -339,14 +453,26 @@ def main():
         if escolha == '1': heroi_selecionado = criar_novo_heroi()
         elif escolha == '2': heroi_selecionado = selecionar_heroi()
         elif escolha == '3' and heroi_selecionado and vidas_heroi > 0:
-            heroi_selecionado.vida_atual = heroi_selecionado.vida_maxima; heroi_selecionado.caos_atual = heroi_selecionado.caos_maximo; heroi_selecionado.buffs_ativos = {}
-            resultado_final = iniciar_masmorra(heroi_selecionado)
-            if resultado_final == "perdeu_masmorra":
-                vidas_heroi -= 1; xp_perdido = heroi_selecionado.xp_atual * PENALIDADE_XP_MORTE; heroi_selecionado.xp_atual -= xp_perdido
-                print(f"Você foi derrotado... Perdeu uma vida e {xp_perdido:.0f} de XP.")
-                if vidas_heroi <= 0: print("GAME OVER."); time.sleep(4)
-                else: print(f"Você tem {vidas_heroi} vidas restantes."); time.sleep(4)
-            elif resultado_final == "venceu_masmorra": print("\n🏆🏆🏆 VOCÊ CONQUISTOU A MASMORRA! 🏆🏆🏆"); time.sleep(5)
+            while vidas_heroi > 0:
+                heroi_selecionado.vida_atual = heroi_selecionado.vida_maxima; heroi_selecionado.caos_atual = heroi_selecionado.caos_maximo; heroi_selecionado.buffs_ativos = {}; heroi_selecionado.efeitos_status = {}
+                resultado_final = iniciar_masmorra(heroi_selecionado, andares_masmorra)
+                
+                if resultado_final in ["derrota", "perdeu_masmorra"]:
+                    vidas_heroi -= 1; xp_perdido = heroi_selecionado.xp_atual * PENALIDADE_XP_MORTE; heroi_selecionado.xp_atual -= xp_perdido
+                    print(f"Você foi derrotado... Perdeu uma vida e {xp_perdido:.0f} de XP.")
+                    if vidas_heroi <= 0: print("GAME OVER."); time.sleep(4); break
+                    else: print(f"Você tem {vidas_heroi} vidas restantes."); time.sleep(4); break
+                
+                elif resultado_final == "fugiu":
+                    xp_perdido = (heroi_selecionado.xp_atual * PENALIDADE_XP_MORTE) / 2
+                    heroi_selecionado.xp_atual -= xp_perdido
+                    print(f"Você fugiu da masmorra, perdendo {xp_perdido:.0f} de XP."); time.sleep(4); break
+
+                elif resultado_final == "venceu_masmorra": 
+                    print("\n🏆🏆🏆 VOCÊ CONQUISTOU A MASMORRA! 🏆🏆🏆"); time.sleep(2)
+                    andares_masmorra += 1
+                    print(f"A próxima masmorra terá {andares_masmorra} andares. Prepare-se!"); time.sleep(4)
+
         elif escolha == '4': print("Obrigado por jogar!"); break
         else: print("Opção inválida!"); time.sleep(1)
 
