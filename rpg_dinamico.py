@@ -3,7 +3,7 @@ import os
 import random
 import time
 
-# --- CONSTANTES DE CONFIGURAÇÃO DO JOGO ---
+# --- CONSTANTES DE CONFIGURAÇÃO DO JOGO --- daniel
 XP_PARA_NIVEL = {1: 10, 2: 25, 3: 50, 4: 80, 5: float('inf')}
 PONTOS_DISTRIBUICAO_INICIAL = 15
 PONTOS_POR_NIVEL = 5
